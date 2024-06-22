@@ -4,9 +4,17 @@
 #include "IClient.h"
 #include "Vector.h"
 #include "MyString.h"
+#include "PolymorphicPtr.h"
 
 class Client : public User, public virtual IClient {
 public:
+    Client (const MyString& firstName, const MyString& surname,
+            const MyString& EGN, unsigned age, const MyString& password,
+            const MyString& address);
+
+    Client(MyString&& firstName, MyString&& surname, MyString&& EGN, unsigned age,
+           MyString&& password, MyString&& address);
+
     void check_avl (const MyString& bankName, const MyString& accountNumber) const override;
     void open (const MyString& bankName) override;
     void close (const MyString& bankName, const MyString& accountNumber) = 0;
@@ -17,13 +25,15 @@ public:
 
     void help() const override;
 
-    Client (const MyString& firstName, const MyString& surname,
-            const MyString& EGN, unsigned age, const MyString& password,
-            const MyString& address) :
-            User(firstName,surname,EGN, age,password),
-            address(address) {}
+    void addAccount (const MyString& accountName);
+
+    void saveToFile(std::ofstream& ofs) const override;
+    void readFromFile(std::ifstream& ifs) override;
 
 private:
+
     MyString address;
-    Vector<MyString> redeemedChecks; //still not completely sure about this
+    Vector<MyString> bankAccounts;
+    Vector<MyString> messageInbox;
+
 };

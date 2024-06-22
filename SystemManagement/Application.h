@@ -46,6 +46,14 @@ public:
 
     void exit_app() const;
 
+    void checkAccountBalance(const MyString& bankName, const MyString& accountNumber, int clientId) const;
+    void openAccount(const MyString& bankName, int clientId);
+    void closeAccount(const MyString& bankName, const MyString& accountNumber, int clientId);
+    void redeemCheck(const MyString& bankName, const MyString& accountNumber, const MyString& verificationCode, int clientId);
+    void changeAccountBank(const MyString& newBankName, const MyString& currBank, const MyString& accNum, int clientId);
+    void listAccounts(const MyString& bankName, int clientId) const;
+    void addMessageToClient(int clientId, const MyString& message);
+
 
 private:
 

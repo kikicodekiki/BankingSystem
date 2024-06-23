@@ -61,6 +61,12 @@ int AccountManagement::findAccountIndex(const MyString& accountNumber) const {
     return -1;
 }
 
-bool AccountManagement::validate(const MyString& taskId) const {
+bool AccountManagement::validate(const MyString& accountNumber, const MyString& ownerEgn) const {
+    int index = findAccountIndex(accountNumber);
+
+    if (index != -1 && accountOwners[index] == ownerEgn) {
+        return true; // Account exists and EGN matches
+    }
+    return false;
 
 }

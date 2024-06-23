@@ -1,39 +1,46 @@
 #pragma once
-#include "IUser.h"
 #include "MyString.h"
+#include "IUser.h"
+#include <fstream>
 
-class User : public virtual IUser  {
-public:
+constexpr size_t EGN_SIZE = 10;
 
-    User (const MyString& firstName, const MyString& surname, const MyString& EGN,
-          unsigned age, const MyString& password );
-    User(MyString&& firstName, MyString&& lastName, MyString&& EGN,
-         unsigned age, MyString&& password);
-
+class User: public virtual IUser {
+public :
     User() = default;
+    User (const MyString& name, const MyString& surname,
+          const MyString& EGN, size_t age,
+          const MyString& password);
+    User (MyString&& name, MyString&& surname,
+          MyString&& EGN, size_t age,
+          MyString&& password);
+
+    virtual ~User() = default;
 
     void whoAmI() const override;
 
-    virtual void saveToFile(std::ofstream& ofs) const = 0;
-    virtual void readFromFile(std::ifstream& ifs) = 0 ;
+    bool authenticate (const MyString& username, const MyString& password) const;
 
-    virtual ~User() = default;
-//    void exit() override;
+    void saveToFile(std::ofstream& ofs) const override;
+    void readFromFile(std::ifstream& ifs) override;
 
-    //not overriding the help function
+    virtual User* clone () const = 0;
+
+    const size_t* getEgn() const {return EGN;}
+    MyString getFullName () const;
+    int getId () const {return id;}
 
 protected:
-    static int currId;
 
-    int id = 0;
-
-    MyString firstName;
+    MyString name;
     MyString surname;
+    size_t EGN[EGN_SIZE];
+    size_t age = 1;
     MyString password;
 
-    unsigned EGN[10]; //will be string in the constructor
+    static int currId;
 
-    unsigned age = 1;
+    int id;
 
     void setEGN (const MyString& EGN);
     void setPassword(const MyString& password);

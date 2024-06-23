@@ -11,6 +11,10 @@ public:
     void execute() override {
         Application::getInstance().list(bankName, clientId);
     }
+    ICommand* clone() const override
+    {
+        return new ListAccountCommand(*this);
+    }
 private:
     MyString bankName;
 };

@@ -11,6 +11,9 @@ public:
     void execute() override {
         Application::getInstance().disapproveTask(taskId, message, employeeId);
     }
+    ICommand* clone() const override {
+        return new DisapproveTaskCommand(*this);
+    }
 private:
     MyString taskId;
     MyString message;

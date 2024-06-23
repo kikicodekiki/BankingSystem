@@ -10,8 +10,9 @@ public:
     bool closeAccount(const MyString& accountNumber) override;
     double checkBalance(const MyString& accountNumber) const override;
     bool transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount) override;
+    void deposit(const MyString& accountNumber, double amount);
 
-    bool validate(const MyString& taskId) const;
+    bool validate(const MyString& accountNumber, const MyString& ownerEgn) const;
 
     AccountManagement() = default;
 

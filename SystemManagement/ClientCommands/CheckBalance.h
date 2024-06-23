@@ -12,6 +12,9 @@ public:
         Application& app = Application::getInstance();
 
     }
+    ICommand* clone() const override {
+        return new CheckBalanceCommand(*this);
+    }
 private:
     MyString bankName;
     MyString accountNumber;

@@ -12,6 +12,10 @@ public:
     void execute() override {
         Application::getInstance().changeAccountBank(newBankName, currBank, accNum, clientId);
     }
+
+    ICommand* clone() const override {
+        return new ChangeAccountBankCommand(*this);
+    }
 private:
     MyString newBankName;
     MyString currBank;

@@ -1,5 +1,7 @@
 #include "AccountManagement.h"
 #include "Bank.h"
+#include "Task.h"
+#include "Application.h"
 
 bool AccountManagement::createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn) {
     if (findAccountIndex(accountNumber) != -1) {
@@ -42,13 +44,11 @@ bool AccountManagement::transferAccount(const MyString& fromAccount, const MyStr
     accountOwners.popAt(index);
 
     // Assuming the toBank object is accessible and can add the account
-    // This part will depend on how the Bank objects interact in your system
-    // Example:
-    //Bank* targetBank = system.findBank(toBank);
-    // if (targetBank) {
-    //     targetBank->createAccount(toAccount, balance, ownerEgn);
-    //     return true;
-    // }
+    Bank* targetBank = Application::getInstance().findBank(toBank);
+    if (targetBank) {
+        targetBank->createAccount(toAccount, balance, ownerEgn);
+        return true;
+    }
     return false;
 }
 
@@ -59,4 +59,8 @@ int AccountManagement::findAccountIndex(const MyString& accountNumber) const {
         }
     }
     return -1;
+}
+
+bool AccountManagement::validate(const MyString& taskId) const {
+
 }

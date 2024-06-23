@@ -11,6 +11,9 @@ public:
     void execute () override {
         Application::getInstance().openAccount(bankName, clientId);
     }
+    ICommand* clone() const override {
+        return new OpenAccountCommand(*this);
+    }
 private:
     MyString bankName;
 

@@ -23,9 +23,13 @@ public:
 
 
     }
+    ICommand* clone() const override {
+        return new SendCheckCommand(*this);
+    }
 
 private:
     double sum;
     MyString EGN;
     MyString bankName;
 };
+    

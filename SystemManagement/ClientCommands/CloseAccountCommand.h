@@ -11,6 +11,9 @@ public:
     void execute() override  {
         Application::getInstance().closeAccount(bankName, accountNumber, clientId);
     }
+    ICommand* clone() const override {
+        return new CloseAccountCommand(*this);
+    }
 private:
     MyString bankName;
     MyString accountNumber;

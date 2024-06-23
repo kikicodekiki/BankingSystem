@@ -5,8 +5,10 @@
 
 
 struct BankCheck {
-    char verificationCode[3];
-    double sum;
+    char verificationCode[3] = " ";
+    double sum = 0.0;
+
+    BankCheck() = default;
 
     BankCheck(const char* code, double sum) {
         strcpy(verificationCode, code);
@@ -23,7 +25,7 @@ struct BankCheck {
         return sum;
     }
 
-    const char* generateVerificationCode() {
+    static const char* generateVerificationCode() {
         static int codeSize = 3;
 
         static const char symbolsToUse[] =

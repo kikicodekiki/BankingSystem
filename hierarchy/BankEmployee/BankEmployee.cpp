@@ -1,17 +1,19 @@
 #include "BankEmployee.h"
 #include "Application.h"
 #include <iostream>
+#include "TaskState.h"
 
 BankEmployee::BankEmployee(const MyString& firstName, const MyString& surname,
-                           const MyString& EGN, unsigned age, const MyString& password)
-        : User(firstName, surname, EGN, age, password) {}
+                           const MyString& EGN, unsigned age, const MyString& password, Bank* bank)
+        : User(firstName, surname, EGN, age, password), bank(bank){ //will directly call for the bank as we
+    //cannot have an initialization without first having created a bank
+}
 
 void BankEmployee::show_tasks() const {
     std::cout << "Tasks:\n";
     for (size_t i = 0; i < tasks.getSize(); ++i) {
         std::cout << "Task ID: " << tasks[i].taskId << ", Type: " <<
-        static_cast<int>(tasks[i].type) <<
-        ", Details: " << tasks[i].details.c_str() << "\n";
+        static_cast<int>(tasks[i].type) << std::endl;
     }
 }
 
@@ -21,7 +23,6 @@ void BankEmployee::view(const MyString& taskId) const {
         if (tasks[i].taskId == id) {
             std::cout << "Viewing Task ID: " << tasks[i].taskId << "\n";
             std::cout << "Type: " << static_cast<int>(tasks[i].type) << "\n";
-            std::cout << "Details: " << tasks[i].details.c_str() << "\n";
             return;
         }
     }
@@ -30,49 +31,30 @@ void BankEmployee::view(const MyString& taskId) const {
 
 void BankEmployee::approve(const MyString& taskId) {
     unsigned id = std::stoul(taskId.c_str());
-    for (size_t i = 0; i < tasks.getSize(); ++i) {
+
+    for (size_t i = 0; i < tasks.getSize(); i++) {
         if (tasks[i].taskId == id) {
-            Task& task = tasks[i];
+            tasks[i].approve();
             Application& app = Application::getInstance();
-
-            switch (task.type) {
-                case TaskType::OPEN:
-                    app.openAccount(task.details, task.client->getId());
-                    break;
-                case TaskType::CLOSE:
-                    app.closeAccount(task.details, task.client->getId());
-                    break;
-                case TaskType::CHANGE: {
-                    // For change, details should include both current and new bank info
-                    MyString currentBank = ...; // extract current bank from details
-                    MyString newBank = ...; // extract new bank from details
-                    app.changeAccountBank(currentBank, newBank, task.client->getId());
-                    break;
-                }
-                default:
-                    std::cout << "Unknown task type.\n";
-                    return;
-            }
-
-            app.addMessageToClient(task.client->getId(), "Your request has been approved.");
-            tasks.popAt(i);
-            std::cout << "Task approved.\n";
+            app.addMessageToClient(tasks[i].client ->getId(),
+                                   "Your task with ID " + taskId + " has been approved by "
+                                   + getFullName());
             return;
         }
     }
-    std::cout << "Task not found.\n";
+
+    std::cout << "Task not found. \n";
 }
 
 void BankEmployee::disapprove(const MyString& taskId, const MyString& message) {
     unsigned id = std::stoul(taskId.c_str());
     for (size_t i = 0; i < tasks.getSize(); ++i) {
         if (tasks[i].taskId == id) {
-            Task& task = tasks[i];
+            tasks[i].reject(message);
             Application& app = Application::getInstance();
-
-            app.addMessageToClient(task.client->getId(), "Your request has been disapproved. Reason: " + message);
-            tasks.popAt(i);
-            std::cout << "Task disapproved.\n";
+            app.addMessageToClient(tasks[i].client->getId(),
+                                   "Your task with ID " + taskId +" has been disapproved by " + getFullName() +
+                                   ". Reason: " + message);
             return;
         }
     }
@@ -80,24 +62,18 @@ void BankEmployee::disapprove(const MyString& taskId, const MyString& message) {
 }
 
 
-void BankEmployee::validate(const MyString& taskId) {
-    unsigned id = std::stoul(taskId.c_str());
-    for (size_t i = 0; i < tasks.getSize(); ++i) {
-        if (tasks[i].taskId == id && tasks[i].type == TaskType::CHANGE) {
-            Task& task = tasks[i];
-            Application& app = Application::getInstance();
+bool BankEmployee::validate(const MyString& taskId) const {
 
-            MyString currentBank = ...; // extract current bank from details
-            Bank* bank = app.findBank(currentBank);
-            if (bank && bank->findUser(task.client->getUsername())) {
-                std::cout << "Task validated.\n";
-            } else {
-                std::cout << "Validation failed. Account not found in the specified bank.\n";
-            }
-            return;
+    unsigned id = std::stoul(taskId.c_str());
+    for (size_t i = 0; i < tasks.getSize(); i++) {
+        if (tasks[i].taskId == id && tasks[i].type == TaskType::CHANGE) {
+            // validate if the client data matches with the account details in the current bank
+            return bank->validateClientData(tasks[i].client, tasks[i].accountNumber);
         }
     }
-    std::cout << "Task not found or invalid task type.\n";
+    std::cout << "Task not found or not a change task.\n";
+    return false;
+
 }
 
 void BankEmployee::addTask(const Task& task) {
@@ -107,3 +83,13 @@ void BankEmployee::addTask(const Task& task) {
 size_t BankEmployee::getTaskCount() const {
     return tasks.getSize();
 }
+
+void BankEmployee::help() const {
+    std::cout << "Available commands:\n";
+    std::cout << "show_tasks - Show all tasks assigned to this employee\n";
+    std::cout << "view [task_id] - View details of a specific task\n";
+    std::cout << "approve [task_id] - Approve a specific task\n";
+    std::cout << "disapprove [task_id] [message] - Disapprove a specific task with a reason\n";
+    std::cout << "validate [task_id] - Validate a change task\n";
+}
+

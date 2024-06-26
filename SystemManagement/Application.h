@@ -4,6 +4,7 @@
 #include "Client.h"
 #include "BankEmployee.h"
 #include "ExternalEmployee.h"
+#include "UserManagement.h"
 #include "Bank.h"
 
 enum class UserType {
@@ -19,8 +20,8 @@ public:
 
     void login(const MyString& username, const MyString& password);
     void signup(const UserType& userType, const MyString& firstName,
-                const MyString& surname, const MyString& EGN, unsigned age,
-                const MyString& bankName = "", const MyString& address = "");
+                const MyString& surname, const MyString& EGN,const MyString& password,
+                size_t age, const MyString& bankName = "", const MyString& address = "");
 
     void createBank(const MyString& bankName);
     void logout();
@@ -30,8 +31,8 @@ public:
     UserType getLoggedType() const;
 
     void changeAccountBank(const MyString& newBankName, const MyString& currBank,
-                                        const MyString& accNum, int clientId);
-    void closeAccount (const MyString& bankName, const MyString& accountNumber, int clientId);
+                           const MyString& accNum, int clientId);
+    void closeAccount(const MyString& bankName, const MyString& accountNumber, int clientId);
     void openAccount(const MyString& bankName, int clientId);
 
     void executeCommand(const MyString& command, const Vector<MyString>& args);
@@ -40,20 +41,13 @@ public:
     Bank* findBank(const MyString& bankName);
     const Bank* findBank(const MyString& bankName) const;
 
-    void signupExternalEmployee(const MyString& firstName, const MyString& surname,
-                                const MyString& EGN, unsigned age, const MyString& password);
-    ExternalEmployee* findExternalEmployeeById(int employeeId);
-
-
-    Client* findClientById(int clientId) ;
+    Client* findClientById(int clientId);
     BankEmployee* getLeastBusyEmployee(const MyString& bankName);
     const BankEmployee* getLeastBusyEmployee(const MyString& bankName) const;
 
-    bool validate(const MyString& taskId) const;
+    double checkAccountBalance(const MyString& bankName, const MyString& accountNumber, int clientId);
 
-    double checkAccountBalance (const MyString& bankName, const MyString& accountNumber, int clientId);
-
-    void list (const MyString& bankName, int clientId) ;
+    void list(const MyString& bankName, int clientId);
 
     void listAccounts(const MyString& bankName, int clientId);
     void sendCheck(double sum, const MyString& verificationCode, const MyString& egn);
@@ -62,21 +56,23 @@ public:
     void validateTask(const MyString& taskId, int employeeId);
 
     void redeemCheck(const MyString& bankName,
-                                  const MyString& accountNumber, const MyString& verificationCode,
-                                  int clientId);
+                     const MyString& accountNumber, const MyString& verificationCode,
+                     int clientId);
+
+    BankEmployee*assignTaskToLeastBusyEmployee(TaskType taskType, int clientId, const MyString& taskDetails);
+
 private:
     User* logged = nullptr;
     UserType type = UserType::DEFAULT;
 
+    UserManagement userManager;
+    Vector<Bank> banks;
     Vector<Client> clients;
     Vector<BankEmployee> employees;
-    Vector<ExternalEmployee> companyEmployees;
-    Vector<Bank> banks;
 
     Application() = default;
     Application(const Application& other) = delete;
     Application& operator=(const Application& other) = delete;
-
-
 };
+
 

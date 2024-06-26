@@ -1,6 +1,7 @@
 #include "Application.h"
 #include <iostream>
 #include "DoubleToString.h"
+#include "CommandFactory.h"
 
 Application& Application::getInstance() {
     static Application app;
@@ -68,40 +69,20 @@ void Application::addMessageToClient(int clientId, const MyString &message) {
     }
 }
 
-bool Application::validate(const MyString& taskId) const {
-    BankEmployee* leastBusyEmployee = getLeastBusyEmployee();
-    return leastBusyEmployee -> validate(taskId);
-
-}
 void Application::openAccount(const MyString& bankName, int clientId) {
     Bank* bank = findBank(bankName);
     if (!bank) {
-        //throw std::runtime_error("Bank not found.\n")
         std::cout << "Bank not found.\n";
         return;
     }
 
-    // Find the least busy employee
-    BankEmployee* leastBusyEmployee = nullptr;
-    for (size_t i = 0; i < employees.getSize(); ++i) {
-        if (!leastBusyEmployee || employees[i].getTaskCount() < leastBusyEmployee->getTaskCount()) {
-            leastBusyEmployee = &employees[i];
-        }
-    }
-
+    BankEmployee* leastBusyEmployee = assignTaskToLeastBusyEmployee(TaskType::OPEN, clientId, "Open account request");
     if (leastBusyEmployee) {
-        Task task(TaskType::OPEN, findClientById(clientId), "Open account request",
-                  static_cast<unsigned>(leastBusyEmployee->getTaskCount() + 1));
-        leastBusyEmployee->addTask(task);
         std::cout << "Task assigned to employee.\n";
     } else {
-        //throw std::runtime_error("No employees available to handle the task.\n");
         std::cout << "No employees available to handle the task.\n";
     }
 }
-
-//tuk da opravq abstrakciqta!!!!!!
-
 void Application::closeAccount(const MyString& bankName, const MyString& accountNumber, int clientId) {
     Bank* bank = findBank(bankName);
     if (!bank) {
@@ -109,34 +90,18 @@ void Application::closeAccount(const MyString& bankName, const MyString& account
         return;
     }
 
-    // Find the least busy employee
-    BankEmployee* leastBusyEmployee = nullptr;
-    for (size_t i = 0; i < employees.getSize(); ++i) {
-        if (!leastBusyEmployee || employees[i].getTaskCount() < leastBusyEmployee->getTaskCount()) {
-            leastBusyEmployee = &employees[i];
-        }
-    }
-
+    BankEmployee* leastBusyEmployee = assignTaskToLeastBusyEmployee(TaskType::CLOSE, clientId, "Close account request");
     if (leastBusyEmployee) {
-        Task task(TaskType::CLOSE, findClientById(clientId), "Close account request",
-                  static_cast<unsigned>(leastBusyEmployee->getTaskCount() + 1));
-        leastBusyEmployee->addTask(task);
         std::cout << "Task assigned to employee.\n";
     } else {
         std::cout << "No employees available to handle the task.\n";
     }
 }
-
 BankEmployee* Application::getLeastBusyEmployee(const MyString& bankName) {
 
     Bank* bank = findBank(bankName);
     BankEmployee* myEmployee = dynamic_cast<BankEmployee*>(bank->getLeastBusyEmployee());
     return myEmployee;
-
-}
-
-const BankEmployee* Application::getLeastBusyEmployee(const MyString& bankName) const {
-
 
 }
 
@@ -149,35 +114,38 @@ void Application::changeAccountBank(const MyString& newBankName, const MyString&
         return;
     }
 
-    //otdelna funciq!!!!!!!!!!!!!
-    // Find the least busy employee
-    BankEmployee* leastBusyEmployee = nullptr;
-    for (size_t i = 0; i < employees.getSize(); ++i) {
-        if (!leastBusyEmployee || employees[i].getTaskCount() < leastBusyEmployee->getTaskCount()) {
-            leastBusyEmployee = &employees[i];
-        }
-    }
-
-    //otdelna funckiq!!!!!!
+    BankEmployee* leastBusyEmployee = assignTaskToLeastBusyEmployee(TaskType::CHANGE, clientId, "Change account bank request");
     if (leastBusyEmployee) {
-        Task task(TaskType::CHANGE, findClientById(clientId), "Change account bank request",
-                  static_cast<unsigned>(leastBusyEmployee->getTaskCount() + 1));
-        leastBusyEmployee->addTask(task);
-        std::cout << "Task assigned to employee.\n";
+        // Perform the actual account transfer
+        if (oldBank->transferAccount(accNum, newBankName, accNum)) {
+            Client* client = findClientById(clientId);
+            if (client) {
+                client->addAccount(accNum);
+                client->addMessage("Account transferred to " + newBankName + " successfully.");
+                std::cout << "Account transferred successfully.\n";
+            }
+        } else {
+            std::cout << "Account transfer failed.\n";
+        }
     } else {
         std::cout << "No employees available to handle the task.\n";
     }
 }
 
-double Application::checkAccountBalance (const MyString& bankName, const MyString& accountNumber, int clientId) {
+double Application::checkAccountBalance(const MyString& bankName, const MyString& accountNumber, int clientId) {
     Bank* bank = findBank(bankName);
+    if (!bank) {
+        std::cout << "Bank not found.\n";
+        return -1;
+    }
     return bank->checkBalance(accountNumber);
 }
 
-void Application::list(const MyString &bankName, int clientId) {
+void Application::list(const MyString& bankName, int clientId) {
     Client* client = findClientById(clientId);
-
-    client->list(bankName);
+    if (client) {
+        client->list(bankName);
+    }
 }
 
 void Application::listAccounts(const MyString& bankName, int clientId) {
@@ -186,20 +154,20 @@ void Application::listAccounts(const MyString& bankName, int clientId) {
         std::cout << "Bank not found.\n";
         return;
     }
-    Vector<MyString> accounts = bank->listAccounts(clientId);
+    Vector<MyString> accounts = bank->listAllAccounts(clientId);
     for (size_t i = 0; i < accounts.getSize(); ++i) {
         std::cout << accounts[i].c_str() << "\n";
     }
 }
 
 void Application::sendCheck(double sum, const MyString& verificationCode, const MyString& egn) {
-    User* user = userManager.findUserByEgn(egn);
+    Polymorphic_Ptr<User> user = userManager.findUser(egn);
     if (!user) {
         std::cout << "User not found.\n";
         return;
     }
 
-    Client* client = dynamic_cast<Client*>(user);
+    Client* client = dynamic_cast<Client*>(user.get());
     if (!client) {
         std::cout << "User is not a client.\n";
         return;
@@ -210,15 +178,15 @@ void Application::sendCheck(double sum, const MyString& verificationCode, const 
 }
 
 void Application::approveTask(const MyString& taskId, int employeeId) {
-    // Find the employee
     for (size_t i = 0; i < employees.getSize(); ++i) {
+
         if (employees[i].getId() == employeeId) {
-            // Find the task within the employee's task list
+
             for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
+
                 MyString str = toString(employees[i].getTasks()[j].taskId);
 
                 if (taskId == str) {
-                    // Approve the task
                     employees[i].getTasks()[j].approve();
                     return;
                 }
@@ -229,16 +197,15 @@ void Application::approveTask(const MyString& taskId, int employeeId) {
 }
 
 void Application::disapproveTask(const MyString& taskId, const MyString& message, int employeeId) {
-    // Find the employee
     for (size_t i = 0; i < employees.getSize(); ++i) {
+
         if (employees[i].getId() == employeeId) {
-            // Find the task within the employee's task list
+
             for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
 
                 MyString str = toString(employees[i].getTasks()[j].taskId);
 
                 if (taskId == str) {
-                    // Disapprove the task
                     employees[i].getTasks()[j].reject(message);
                     return;
                 }
@@ -249,16 +216,19 @@ void Application::disapproveTask(const MyString& taskId, const MyString& message
 }
 
 void Application::validateTask(const MyString& taskId, int employeeId) {
-    // Find the employee
     for (size_t i = 0; i < employees.getSize(); ++i) {
+
         if (employees[i].getId() == employeeId) {
-            // Find the task within the employee's task list
+
             for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
+
                 MyString str = toString(employees[i].getTasks()[j].taskId);
+
                 if (str == taskId) {
-                    // Validate the task
+
                     if (employees[i].validate(taskId)) {
                         std::cout << "Task validated successfully.\n";
+
                     } else {
                         std::cout << "Task validation failed.\n";
                     }
@@ -284,17 +254,99 @@ void Application::redeemCheck(const MyString& bankName, const MyString& accountN
     }
 }
 
-void Application::signupExternalEmployee(const MyString& firstName, const MyString& surname,
-                                         const MyString& EGN, unsigned age, const MyString& password) {
-    ExternalEmployee employee(firstName, surname, EGN, age, password);
-    companyEmployees.pushBack(employee);
+void Application::signup(const UserType& userType, const MyString& firstName,
+                         const MyString& surname, const MyString& EGN, const MyString& password,
+                         size_t age, const MyString& bankName, const MyString& address) {
+    switch (userType) {
+        case UserType::Client: {
+            if (banks.empty())
+                userManager.addUser(Polymorphic_Ptr<User>(new Client(firstName, surname, EGN,
+                                                                     age,password, address)));
+            break;
+        }
+        case UserType::Employee:
+        {
+            Bank* bank = findBank(bankName);
+            if (!bank) {
+                std::cout << "Bank not found.\n";
+                return;
+            }
+            userManager.addUser(Polymorphic_Ptr<User>(new BankEmployee(firstName, surname, EGN, age, address, bank)));
+        }
+            break;
+        case UserType::ExternalEmployee:
+            userManager.addUser(Polymorphic_Ptr<User>(new ExternalEmployee(firstName, surname, EGN, age, address)));
+            break;
+        default:
+            std::cout << "Invalid user type.\n";
+            break;
+    }
 }
 
-ExternalEmployee* Application::findExternalEmployeeById(int employeeId) {
-    for (size_t i = 0; i < companyEmployees.getSize(); ++i) {
-        if (companyEmployees[i].getId() == employeeId) {
-            return &companyEmployees[i];
+void Application::login(const MyString& username, const MyString& password) {
+    for (size_t i = 0; i < userManager.getUsers().getSize(); i++) {
+        if (userManager.getUsers()[i]->authenticate(username, password)) {
+            logged = userManager.getUsers()[i].get();
+            if (dynamic_cast<Client*>(logged)) {
+                type = UserType::Client;
+            } else if (dynamic_cast<BankEmployee*>(logged)) {
+                type = UserType::Employee;
+            } else if (dynamic_cast<ExternalEmployee*>(logged)) {
+                type = UserType::ExternalEmployee;
+            } else {
+                type = UserType::DEFAULT;
+            }
+            std::cout << "Login successful.\n";
+            return;
         }
     }
-    return nullptr;
+    std::cout << "Invalid username or password.\n";
+}
+
+BankEmployee* Application::assignTaskToLeastBusyEmployee(TaskType taskType, int clientId, const MyString& taskDetails) {
+    BankEmployee* leastBusyEmployee = nullptr;
+    for (size_t i = 0; i < employees.getSize(); ++i) {
+        if (!leastBusyEmployee || employees[i].getTaskCount() < leastBusyEmployee->getTaskCount()) {
+            leastBusyEmployee = &employees[i];
+        }
+    }
+
+    if (leastBusyEmployee) {
+        Task task(taskType, findClientById(clientId), "", taskDetails, static_cast<unsigned>(leastBusyEmployee->getTaskCount() + 1));
+        leastBusyEmployee->addTask(task);
+    }
+
+    return leastBusyEmployee;
+}
+
+void Application::executeCommand(const MyString& command, const Vector<MyString>& args) {
+    ICommand* cmd = nullptr;
+
+    if (command == "approve") {
+        cmd = CommandFactory::createApproveTaskCommand(args[0], std::stoi(args[1].c_str()));
+    } else if (command == "change") {
+        cmd = CommandFactory::createChangeAccountBankCommand(args[0], args[1], args[2], std::stoi(args[3].c_str()));
+    } else if (command == "check_balance") {
+        cmd = CommandFactory::createCheckBalanceCommand(args[0], args[1], std::stoi(args[2].c_str()));
+    } else if (command == "close") {
+        cmd = CommandFactory::createCloseAccountCommand(args[0], args[1], std::stoi(args[2].c_str()));
+    } else if (command == "disapprove") {
+        cmd = CommandFactory::createDisapproveTaskCommand(args[0], args[1], std::stoi(args[2].c_str()));
+    } else if (command == "open") {
+        cmd = CommandFactory::createOpenAccountCommand(args[0], std::stoi(args[1].c_str()));
+    } else if (command == "send_check") {
+        cmd = CommandFactory::createSendCheckCommand(std::stod(args[0].c_str()), args[1], args[2], std::stoi(args[3].c_str()));
+    } else if (command == "validate") {
+        cmd = CommandFactory::createValidateTaskCommand(args[0], std::stoi(args[1].c_str()));
+    } else if (command == "redeem_check") {
+        cmd = CommandFactory::createRedeemCheckCommand(args[0], args[1], args[2], std::stoi(args[3].c_str()));
+    } else {
+        std::cout << "Unknown command.\n";
+        return;
+    }
+
+    if (cmd) {
+        cmd->execute();
+        delete cmd;
+    }
 }

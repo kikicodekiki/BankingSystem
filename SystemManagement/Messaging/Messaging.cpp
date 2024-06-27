@@ -1,3 +1,4 @@
+#pragma once
 #include "Messaging.h"
 
 void Messaging::sendMessage(const MyString& userEgn, const MyString& message) {

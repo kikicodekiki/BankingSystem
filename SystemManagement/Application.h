@@ -1,20 +1,44 @@
 #pragma once
-#include "User.h"
-#include "Vector.h"
-#include "Client.h"
-#include "BankEmployee.h"
-#include "ExternalEmployee.h"
-#include "UserManagement.h"
-#include "Bank.h"
 
+//#include "User.h"
+#include "Vector.h"
+//#include "Client.h"
+//#include "BankEmployee.h"
+//#include "ExternalEmployee.h"
+#include "UserManagement.h"
+//#include "Bank.h"
+#include "DoubleToString.h"
+//#include "Task.h"
+#include "PolymorphicPtr.h"
+#include "MyString.h"
+
+enum class TaskType;
 enum class UserType {
     Client,
     Employee,
     ExternalEmployee,
     DEFAULT
 };
+//class UserManagement;
+class ExternalEmployee;
+class Client;
+class BankEmployee;
+class Bank;
+class User;
 
 class Application {
+
+private:
+    User* logged = nullptr;
+    UserType type = UserType::DEFAULT;
+
+    UserManagement userManager;
+    Vector<Bank> banks;
+    Vector<Polymorphic_Ptr<Client>> clients;
+    Vector<Polymorphic_Ptr<BankEmployee>> employees;
+
+    Application() = default;
+
 public:
     static Application& getInstance();
 
@@ -35,7 +59,7 @@ public:
     void closeAccount(const MyString& bankName, const MyString& accountNumber, int clientId);
     void openAccount(const MyString& bankName, int clientId);
 
-    void executeCommand(const MyString& command, const Vector<MyString>& args);
+   // void executeCommand(const MyString& command, const Vector<MyString>& args);
 
     void addMessageToClient(int clientId, const MyString& message);
     Bank* findBank(const MyString& bankName);
@@ -43,7 +67,7 @@ public:
 
     Client* findClientById(int clientId);
     BankEmployee* getLeastBusyEmployee(const MyString& bankName);
-    const BankEmployee* getLeastBusyEmployee(const MyString& bankName) const;
+//    const BankEmployee* getLeastBusyEmployee(const MyString& bankName) const;
 
     double checkAccountBalance(const MyString& bankName, const MyString& accountNumber, int clientId);
 
@@ -60,19 +84,9 @@ public:
                      int clientId);
 
     BankEmployee*assignTaskToLeastBusyEmployee(TaskType taskType, int clientId, const MyString& taskDetails);
-
-private:
-    User* logged = nullptr;
-    UserType type = UserType::DEFAULT;
-
-    UserManagement userManager;
-    Vector<Bank> banks;
-    Vector<Client> clients;
-    Vector<BankEmployee> employees;
-
-    Application() = default;
     Application(const Application& other) = delete;
     Application& operator=(const Application& other) = delete;
+
 };
 
 

@@ -1,4 +1,7 @@
 #include "UserManagement.h"
+#include "DoubleToString.h"
+#include "BankEmployee.h"
+#include <sstream>
 
 void UserManagement::addUser(Polymorphic_Ptr<User> user) {
     if(dynamic_cast<Client*>(user.get())) {
@@ -72,6 +75,35 @@ BankEmployee* UserManagement::findLeastBusyEmployee() {
 }
 
 const BankEmployee* UserManagement::findLeastBusyEmployee() const {
-    
+
     return const_cast<UserManagement*>(this)->findLeastBusyEmployee();
+}
+
+Client* UserManagement::findClientById (int clientId)  {
+    for (size_t i = 0; i < users.getSize(); ++i) {
+        Client* client = dynamic_cast<Client*>(users[i].get());
+        if (client && client->getId() == clientId) {
+            return client;
+        }
+    }
+    return nullptr;
+}
+
+static MyString convertEgnArrayToString(const size_t arr[EGN_SIZE]) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < EGN_SIZE; ++i) {
+        oss << std::setw(2) << std::setfill('0') << arr[i];
+    }
+    return MyString(oss.str().c_str());
+}
+
+User* UserManagement::findUserByEgn(const MyString& egn) {
+    for (size_t i = 0; i < users.getSize(); ++i) {
+        MyString str = convertEgnArrayToString(users[i]->getEgn());
+
+        if (str == egn) {
+            return users[i].get();
+        }
+    }
+    return nullptr;
 }

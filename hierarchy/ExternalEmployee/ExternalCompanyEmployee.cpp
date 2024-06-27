@@ -1,5 +1,6 @@
+
 #include "ExternalEmployee.h"
-#include "Application.h"
+
 
 ExternalEmployee::ExternalEmployee(const MyString &firstName, const MyString &lastName,
                                    const MyString &EGN, size_t age,

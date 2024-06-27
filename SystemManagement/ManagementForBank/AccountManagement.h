@@ -6,21 +6,31 @@
 
 class AccountManagement : public IAccountManagement {
 public:
+    AccountManagement() = default;
+
     bool createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn) override;
     bool closeAccount(const MyString& accountNumber) override;
     double checkBalance(const MyString& accountNumber) const override;
     bool transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount) override;
-    void deposit(const MyString& accountNumber, double amount);
 
-    bool validate(const MyString& accountNumber, const MyString& ownerEgn) const;
+//    bool validate(const MyString& accountNumber, const MyString& ownerEgn) const;
 
-    AccountManagement() = default;
+protected:
+    struct Account {
+        MyString accountNumber;
+        double balance = 0.0;
+        MyString ownerEGN;
 
-private:
-    Vector<MyString> accountNumbers;
-    Vector<double> accountBalances;
-    Vector<MyString> accountOwners;
+        Account(const MyString& accountNumber, double balance, const MyString& ownerEgn)
+                : accountNumber(accountNumber), balance(balance), ownerEGN(ownerEgn) {}
 
-    int findAccountIndex(const MyString& accountNumber) const;
+        Account() = default;
+
+        void saveToFIle ( std::ofstream& ofs ) const;
+        void readFromFile (std::ifstream& ifs);
+    };
+
+    Vector<Account> accounts;
+
+//    int findAccountIndex(const MyString& accountNumber) const;
 };
-

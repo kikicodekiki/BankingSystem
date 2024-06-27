@@ -88,12 +88,3 @@ bool User::authenticate(const MyString& username, const MyString& password) cons
 MyString User::getFullName() const {
     return name + " " + surname;
 }
-
-
-void User::saveToFile(std::ofstream& ofs) const {
-    ofs << name << '\n' << surname << '\n' << age << '\n' << password << '\n';
-    for (size_t i = 0; i < EGN_SIZE; ++i) {
-        ofs << EGN[i];
-    }
-    ofs << '\n';
-}

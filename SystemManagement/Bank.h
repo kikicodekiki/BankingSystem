@@ -1,15 +1,21 @@
 #pragma once
+
 #include "AccountManagement.h"
-#pragma once
-#include "AccountManagement.h"
+
 #include "UserManagement.h"
+
 #include "Messaging.h"
-#include "MyString.h"
-#include "Task.h"
-#include "BankEmployee.h"
+//#include "MyString.h"
+//#include "Application.h"
+////#include "Task.h"
+////#include "BankEmployee.h"
 #include "BankCheck.h"
 
-class Bank {
+//class Messaging;
+
+class Application;
+class Bank{
+
 public:
     Bank() = default;
 
@@ -17,19 +23,19 @@ public:
 
     const MyString& getName() const;
 
-    // User Management
+    //user management
     void addUser(User* user);
     Polymorphic_Ptr<User> findUser(const MyString& egn) const;
     Polymorphic_Ptr<User> findUser (const size_t arr[EGN_SIZE]) const;
 
 
-    // Account Management
+    //account management
     bool createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn);
     bool closeAccount(const MyString& accountNumber);
     double checkBalance(const MyString& accountNumber) const;
     bool transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount);
 
-    // Messaging
+    //messaging
     void sendMessage(const MyString& userEgn, const MyString& message);
     Vector<MyString> getMessages(const MyString& userEgn) const;
 
@@ -42,12 +48,21 @@ public:
     double redeemCheck (const MyString& accountNumber, const MyString& verificationCode);
 
     void listAccounts (int clientId) ;
+    Vector<MyString> listAllAccounts (int clientId);
+
+//    AccountManagement& getAccountManager() {
+//        return accountManager;
+//    }
+//
+//    UserManagement& getUserManager() {
+//        return userManager;
+//    }
 
 private:
 
     MyString bankName;
 
-    AccountManagement accountManager;
+    AccountManagement accountManager ;
     UserManagement userManager;
     Messaging messaging;
 

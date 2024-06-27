@@ -1,11 +1,11 @@
 #pragma once
 #include "MyString.h"
-#include "IUser.h"
+
 #include <fstream>
 
-constexpr size_t EGN_SIZE = 10;
+const size_t EGN_SIZE = 10;
 
-class User: public virtual IUser {
+class User {
 public :
     User() = default;
     User (const MyString& name, const MyString& surname,
@@ -17,14 +17,16 @@ public :
 
     virtual ~User() = default;
 
-    void whoAmI() const override;
+    void whoAmI() const ;
 
     bool authenticate (const MyString& username, const MyString& password) const;
 
-    void saveToFile(std::ofstream& ofs) const override;
-    void readFromFile(std::ifstream& ifs) override;
+//    void saveToFile(std::ofstream& ofs) const ;
+//    void readFromFile(std::ifstream& ifs);
 
     virtual User* clone () const = 0;
+
+    void help() const ;
 
     const size_t* getEgn() const {return EGN;}
     MyString getFullName () const;

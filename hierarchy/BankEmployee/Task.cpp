@@ -1,6 +1,6 @@
+#pragma once
 #include "Task.h"
 #include "TaskState.h"
-#include "NeedsApproval.h"
 
 Task::Task(const TaskType& t, const Client* c, const MyString& accNum, const MyString& d, unsigned id)
         : type(t), client(c), accountNumber(accNum), details(d), taskId(id), state(new NeedsApproval()) {}
@@ -33,3 +33,4 @@ void Task::cleanupState() {
         state = nullptr;
     }
 }
+

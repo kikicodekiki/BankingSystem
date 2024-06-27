@@ -4,6 +4,7 @@
 #include "Vector.h"
 #include "TaskState.h"
 #include "Client.h"
+
 #include "Bank.h"
 
 enum class TaskType {
@@ -14,10 +15,11 @@ enum class TaskType {
 };
 
 class Task {
+
 public:
     TaskType type = TaskType::Default;
     const Client* client = nullptr;
-    const Bank* bank = nullptr;
+    Bank * bank = nullptr;
     unsigned taskId = 0;
     TaskState* state = nullptr;
     MyString accountNumber;

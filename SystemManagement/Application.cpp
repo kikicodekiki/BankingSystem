@@ -1,7 +1,12 @@
 #include "Application.h"
+#include "BankEmployee.h"
+#include "Client.h"
+#include "Bank.h"
+#include "UserManagement.h"
+#include "ExternalEmployee.h"
+#include "User.h"
 #include <iostream>
-#include "DoubleToString.h"
-#include "CommandFactory.h"
+
 
 Application& Application::getInstance() {
     static Application app;
@@ -9,8 +14,12 @@ Application& Application::getInstance() {
 }
 
 void Application::createBank(const MyString& bankName) {
-    banks.pushBack(Bank(bankName));
-    std::cout << "Bank " << bankName.c_str() << " created.\n";
+    if (findBank(bankName) == nullptr) {
+        banks.pushBack(Bank(bankName));
+        std::cout << "Bank " << bankName.c_str() << " created.\n";
+    } else {
+        std::cout << "Bank already exists.\n";
+    }
 }
 
 void Application::logout() {
@@ -55,8 +64,8 @@ const Bank* Application::findBank(const MyString& bankName) const {
 
 Client* Application::findClientById(int clientId) {
     for (size_t i = 0; i < clients.getSize(); i++) {
-        if(clients[i].getId() == clientId) {
-            return &clients[i];
+        if(clients[i]->getId() == clientId) {
+            return clients[i].get();
         }
     }
     return nullptr;
@@ -180,14 +189,14 @@ void Application::sendCheck(double sum, const MyString& verificationCode, const 
 void Application::approveTask(const MyString& taskId, int employeeId) {
     for (size_t i = 0; i < employees.getSize(); ++i) {
 
-        if (employees[i].getId() == employeeId) {
+        if (employees[i]->getId() == employeeId) {
 
-            for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
+            for (size_t j = 0; j < employees[i]->getTaskCount(); ++j) {
 
-                MyString str = toString(employees[i].getTasks()[j].taskId);
+                MyString str = toString(employees[i]->getTasks()[j].taskId);
 
                 if (taskId == str) {
-                    employees[i].getTasks()[j].approve();
+                    employees[i]->getTasks()[j].approve();
                     return;
                 }
             }
@@ -199,14 +208,14 @@ void Application::approveTask(const MyString& taskId, int employeeId) {
 void Application::disapproveTask(const MyString& taskId, const MyString& message, int employeeId) {
     for (size_t i = 0; i < employees.getSize(); ++i) {
 
-        if (employees[i].getId() == employeeId) {
+        if (employees[i]->getId() == employeeId) {
 
-            for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
+            for (size_t j = 0; j < employees[i]->getTaskCount(); ++j) {
 
-                MyString str = toString(employees[i].getTasks()[j].taskId);
+                MyString str = toString(employees[i]->getTasks()[j].taskId);
 
                 if (taskId == str) {
-                    employees[i].getTasks()[j].reject(message);
+                    employees[i]->getTasks()[j].reject(message);
                     return;
                 }
             }
@@ -218,15 +227,15 @@ void Application::disapproveTask(const MyString& taskId, const MyString& message
 void Application::validateTask(const MyString& taskId, int employeeId) {
     for (size_t i = 0; i < employees.getSize(); ++i) {
 
-        if (employees[i].getId() == employeeId) {
+        if (employees[i]->getId() == employeeId) {
 
-            for (size_t j = 0; j < employees[i].getTaskCount(); ++j) {
+            for (size_t j = 0; j < employees[i]->getTaskCount(); ++j) {
 
-                MyString str = toString(employees[i].getTasks()[j].taskId);
+                MyString str = toString(employees[i]->getTasks()[j].taskId);
 
                 if (str == taskId) {
 
-                    if (employees[i].validate(taskId)) {
+                    if (employees[i]->validate(taskId)) {
                         std::cout << "Task validated successfully.\n";
 
                     } else {
@@ -306,8 +315,8 @@ void Application::login(const MyString& username, const MyString& password) {
 BankEmployee* Application::assignTaskToLeastBusyEmployee(TaskType taskType, int clientId, const MyString& taskDetails) {
     BankEmployee* leastBusyEmployee = nullptr;
     for (size_t i = 0; i < employees.getSize(); ++i) {
-        if (!leastBusyEmployee || employees[i].getTaskCount() < leastBusyEmployee->getTaskCount()) {
-            leastBusyEmployee = &employees[i];
+        if (!leastBusyEmployee || employees[i]->getTaskCount() < leastBusyEmployee->getTaskCount()) {
+            leastBusyEmployee = employees[i].get();
         }
     }
 
@@ -317,36 +326,4 @@ BankEmployee* Application::assignTaskToLeastBusyEmployee(TaskType taskType, int 
     }
 
     return leastBusyEmployee;
-}
-
-void Application::executeCommand(const MyString& command, const Vector<MyString>& args) {
-    ICommand* cmd = nullptr;
-
-    if (command == "approve") {
-        cmd = CommandFactory::createApproveTaskCommand(args[0], std::stoi(args[1].c_str()));
-    } else if (command == "change") {
-        cmd = CommandFactory::createChangeAccountBankCommand(args[0], args[1], args[2], std::stoi(args[3].c_str()));
-    } else if (command == "check_balance") {
-        cmd = CommandFactory::createCheckBalanceCommand(args[0], args[1], std::stoi(args[2].c_str()));
-    } else if (command == "close") {
-        cmd = CommandFactory::createCloseAccountCommand(args[0], args[1], std::stoi(args[2].c_str()));
-    } else if (command == "disapprove") {
-        cmd = CommandFactory::createDisapproveTaskCommand(args[0], args[1], std::stoi(args[2].c_str()));
-    } else if (command == "open") {
-        cmd = CommandFactory::createOpenAccountCommand(args[0], std::stoi(args[1].c_str()));
-    } else if (command == "send_check") {
-        cmd = CommandFactory::createSendCheckCommand(std::stod(args[0].c_str()), args[1], args[2], std::stoi(args[3].c_str()));
-    } else if (command == "validate") {
-        cmd = CommandFactory::createValidateTaskCommand(args[0], std::stoi(args[1].c_str()));
-    } else if (command == "redeem_check") {
-        cmd = CommandFactory::createRedeemCheckCommand(args[0], args[1], args[2], std::stoi(args[3].c_str()));
-    } else {
-        std::cout << "Unknown command.\n";
-        return;
-    }
-
-    if (cmd) {
-        cmd->execute();
-        delete cmd;
-    }
 }

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <random>
 
-
+class BankEmployee;
 
 struct BankCheck {
     char verificationCode[3] = " ";

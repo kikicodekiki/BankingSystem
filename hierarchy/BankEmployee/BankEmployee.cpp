@@ -1,3 +1,4 @@
+#pragma once
 #include "BankEmployee.h"
 #include "Application.h"
 #include <iostream>
@@ -92,4 +93,3 @@ void BankEmployee::help() const {
     std::cout << "disapprove [task_id] [message] - Disapprove a specific task with a reason\n";
     std::cout << "validate [task_id] - Validate a change task\n";
 }
-

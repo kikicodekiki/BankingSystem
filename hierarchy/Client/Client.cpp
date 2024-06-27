@@ -1,3 +1,4 @@
+agma once
 #include "Client.h"
 #include "Application.h"
 #include <iostream>
@@ -9,6 +10,7 @@ Client::Client(MyString&& firstName, MyString&& surname, MyString&& EGN, unsigne
         : User(std::move(firstName), std::move(surname), std::move(EGN), age, std::move(password)), address(std::move(address)) {}
 
 void Client::check_avl(const MyString& bankName, const MyString& accountNumber) const {
+
     Application& app = Application::getInstance();
     app.checkAccountBalance(bankName, accountNumber, id);
 }
@@ -52,38 +54,6 @@ void Client::addMessage(const MyString& message) {
     messageInbox.pushBack(message);
 }
 
-void Client::saveToFile(std::ofstream& ofs) const {
-    User::saveToFile(ofs);
-    ofs << address << '\n';
-    ofs << bankAccounts.getSize() << '\n';
-    for (size_t i = 0; i < bankAccounts.getSize(); ++i) {
-        ofs << bankAccounts[i] << '\n';
-    }
-    ofs << messageInbox.getSize() << '\n';
-    for (size_t i = 0; i < messageInbox.getSize(); ++i) {
-        ofs << messageInbox[i] << '\n';
-    }
-}
-
-void Client::readFromFile(std::ifstream& ifs) {
-    User::readFromFile(ifs);
-    std::string str;
-    std::getline(ifs, str);
-    address = MyString(str.c_str());
-    size_t size;
-    ifs >> size;
-    ifs.ignore(); // ignore newline
-    for (size_t i = 0; i < size; ++i) {
-        std::getline(ifs, str);
-        bankAccounts.pushBack(MyString(str.c_str()));
-    }
-    ifs >> size;
-    ifs.ignore(); // ignore newline
-    for (size_t i = 0; i < size; ++i) {
-        std::getline(ifs, str);
-        messageInbox.pushBack(MyString(str.c_str()));
-    }
-}
 
 Vector<MyString> Client::getAccounts() const {
     return bankAccounts;

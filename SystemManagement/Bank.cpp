@@ -1,6 +1,7 @@
+#pragma once
 #include "Bank.h"
+#include "BankEmployee.h"
 #include "Application.h"
-
 
 Bank::Bank(const MyString &name) : bankName(name) {}
 
@@ -9,7 +10,7 @@ const MyString& Bank::getName () const {
 }
 
 void Bank::addUser(User* user) {
-    userManager.addUser(user);
+    userManager.addUser(Polymorphic_Ptr<User>(user));
 }
 
 Polymorphic_Ptr<User> Bank::findUser(const MyString &egn) const {
@@ -103,7 +104,7 @@ double Bank::redeemCheck (const MyString& accountNumber, const MyString& verific
         }
     }
 
-    return -1; // Check not found
+    return -1; // heck not found
 }
 
 void Bank::listAccounts (int clientId)  {
@@ -124,4 +125,15 @@ void Bank::listAccounts (int clientId)  {
         }
     }
 
+}
+
+Vector<MyString> Bank::listAllAccounts (int clientId) {
+    Client* client = dynamic_cast<Client*>(userManager.findClientById(clientId));
+
+    if (!client) {
+        throw std::runtime_error("Client not found\n");
+    }
+
+    Vector<MyString> accounts = client->getAccounts();
+    return accounts;
 }

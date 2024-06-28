@@ -1,10 +1,11 @@
-#pragma once
 #include "Task.h"
 #include "TaskState.h"
 
-Task::Task(const TaskType& t, const Client* c, const MyString& accNum, const MyString& d, unsigned id)
-        : type(t), client(c), accountNumber(accNum), details(d), taskId(id), state(new NeedsApproval()) {}
-
+Task::Task(const TaskType &t,const MyString& clientName, const MyString& bankName, const MyString &accNum,
+           const MyString &d, unsigned int id) : type(t), clientName(clientName),
+                                                                   bankName(bankName),
+                                                 accountNumber(accNum), details(d), taskId(id),
+                                                 state(new NeedsApproval()) {}
 
 Task::~Task() {
     delete state;
@@ -32,5 +33,21 @@ void Task::cleanupState() {
         delete state;
         state = nullptr;
     }
+}
+
+void Task::readFromFile(std::ifstream& ifs) {
+    // Implementation
+}
+
+void Task::validate() {
+    // Implementation
+}
+
+void Task::saveToFile(std::ofstream& ofs) const {
+    // Implementation
+}
+
+void Task::viewTask() const {
+    // Implementation
 }
 

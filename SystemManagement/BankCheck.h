@@ -2,14 +2,12 @@
 #include <cstring>
 #include <random>
 
-class BankEmployee;
-
-struct BankCheck {
-    char verificationCode[3] = " ";
+class BankCheck {
+public:
+    char verificationCode[4] = " ";
     double sum = 0.0;
 
     BankCheck() = default;
-
     BankCheck(const char* code, double sum) {
         strcpy(verificationCode, code);
         this->sum = sum;
@@ -17,41 +15,31 @@ struct BankCheck {
 
     ~BankCheck() = default;
 
-    const char* getVerificationCode () const {
-        return  verificationCode;
+    const char* getVerificationCode() const {
+        return verificationCode;
     }
 
-    double getSum () const {
+    double getSum() const {
         return sum;
     }
 
-    static const char* generateVerificationCode() {
-        static int codeSize = 3;
-
-        static const char symbolsToUse[] =
-                "0123456789"
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                "abcdefghijklmnopqrstuvwxyz";
-        char code[codeSize + 1];
-
-        for (int i = 0; i < codeSize; i++) {
+    static void generateVerificationCode(char* code) {
+        static const char symbolsToUse[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        for (int i = 0; i < 3; i++) {
             code[i] = symbolsToUse[rand() % (sizeof(symbolsToUse) - 1)];
         }
-
-        code [codeSize] = '\0';
-        return code;
+        code[3] = '\0';
     }
 
-    void setCode () {
-        strcpy(verificationCode, generateVerificationCode());
+    void setCode() {
+        generateVerificationCode(verificationCode);
     }
 
     void setCode(const char* code) {
         strcpy(verificationCode, code);
     }
 
-
-    double setSum (double sum) {
+    void setSum(double sum) {
         if(sum > 0) {
             this->sum = sum;
         }

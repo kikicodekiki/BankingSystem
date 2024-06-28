@@ -1,72 +1,96 @@
 #include "AccountManagement.h"
-#include "Bank.h"
-#include "Task.h"
-#include "Application.h"
+#include <assert.h>
 
-bool AccountManagement::createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn) {
-    if (findAccountIndex(accountNumber) != -1) {
-        return false; // Account already exists
-    }
-    accountNumbers.pushBack(accountNumber);
-    accountBalances.pushBack(initialBalance);
-    accountOwners.pushBack(ownerEgn);
-    return true;
+int Account::accNum = 1;
+
+Account::Account() {
+    accountNumber = accNum++;
 }
 
-bool AccountManagement::closeAccount(const MyString& accountNumber) {
-    int index = findAccountIndex(accountNumber);
-    if (index == -1) {
-        return false; // Account does not exist
-    }
-    accountNumbers.popAt(index);
-    accountBalances.popAt(index);
-    accountOwners.popAt(index);
-    return true;
+size_t Account::getAccountNumber() const {
+    return accountNumber;
 }
 
-double AccountManagement::checkBalance(const MyString& accountNumber) const {
-    int index = findAccountIndex(accountNumber);
-    if (index == -1) {
-        return -1.0; // Account does not exist
-    }
-    return accountBalances[index];
+double Account::getBalance() const {
+    return balance;
 }
 
-bool AccountManagement::transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount) {
-    int index = findAccountIndex(fromAccount);
-    if (index == -1) {
-        return false; // Account does not exist
-    }
-    double balance = accountBalances[index];
-    MyString ownerEgn = accountOwners[index];
-    accountNumbers.popAt(index);
-    accountBalances.popAt(index);
-    accountOwners.popAt(index);
-
-    // Assuming the toBank object is accessible and can add the account
-    Bank* targetBank = Application::getInstance().findBank(toBank);
-    if (targetBank) {
-        targetBank->createAccount(toAccount, balance, ownerEgn);
-        return true;
-    }
-    return false;
+void Account::depositMoney(double money) {
+    assert(money > 0.0);
+    balance += money;
 }
 
-int AccountManagement::findAccountIndex(const MyString& accountNumber) const {
-    for (size_t i = 0; i < accountNumbers.getSize(); ++i) {
-        if (accountNumbers[i] == accountNumber) {
+void Account::withdrawMoney(double money) {
+    assert(money > 0.0 && money <= balance);
+    balance -= money;
+}
+
+void Account::saveToFile(std::ofstream& ofs) const {
+    ofs.write(reinterpret_cast<const char*>(&accountNumber), sizeof(accountNumber));
+    ofs.write(reinterpret_cast<const char*>(&balance), sizeof(balance));
+}
+
+void Account::readFromFile(std::ifstream& ifs) {
+    ifs.read(reinterpret_cast< char*>(&accountNumber), sizeof(accountNumber));
+    ifs.read(reinterpret_cast< char*>(&balance), sizeof(balance));
+}
+
+
+void AccountManagement::createAccount(const MyString& username) {
+    Account newAccount;
+    Pair<MyString, Account> newBankAccount(username, newAccount);
+    bankAccounts.pushBack(newBankAccount);
+}
+
+void AccountManagement::closeAccount(const MyString& username, size_t accNum) {
+    int idx = getIndexByAccNumAndUsername(accNum, username);
+    bankAccounts.popAt(idx);
+}
+
+double AccountManagement::checkBalance(size_t accNum) const {
+    size_t index = getIndexByAccNum(accNum);
+    return bankAccounts[index].getRhs().getBalance();
+}
+
+void AccountManagement::deposit(size_t accountNumber, const MyString& username, double amount) {
+    assert(amount > 0);
+    int idx = getIndexByAccNumAndUsername(accountNumber, username);
+    bankAccounts[idx].getRhs().depositMoney(amount);
+}
+
+void AccountManagement::withdraw(size_t accountNumber, const MyString& username, double amount) {
+    assert(amount > 0);
+    int idx = getIndexByAccNumAndUsername(accountNumber, username);
+    bankAccounts[idx].getRhs().withdrawMoney(amount);
+}
+
+size_t AccountManagement::getIndexByAccNumAndUsername(size_t accNum, const MyString& username) const {
+    int bankAccountsCount = bankAccounts.getSize();
+    if (bankAccountsCount == 0) {
+        throw std::runtime_error("There are no such accounts.");
+    }
+    for (size_t i = 0; i < bankAccountsCount; i++) {
+        if (bankAccounts[i].getRhs().getAccountNumber() == accNum && bankAccounts[i].getLhs() == username) {
             return i;
         }
     }
-    return -1;
+    throw std::runtime_error("There is no such account.");
 }
 
-bool AccountManagement::validate(const MyString& accountNumber, const MyString& ownerEgn) const {
-    int index = findAccountIndex(accountNumber);
-
-    if (index != -1 && accountOwners[index] == ownerEgn) {
-        return true; // Account exists and EGN matches
+size_t AccountManagement::getIndexByAccNum(size_t accNum) const {
+    int bankAccountsCount = bankAccounts.getSize();
+    if (bankAccountsCount == 0) {
+        throw std::runtime_error("There are no accounts existing in that bank.");
     }
-    return false;
+    for (size_t i = 0; i < bankAccountsCount; i++) {
+        if (bankAccounts[i].getRhs().getAccountNumber() == accNum) {
+            return i;
+        }
+    }
+    throw std::runtime_error("There is no such account.");
+}
 
+Vector<Pair<MyString, Account>> AccountManagement::getBankAccounts() const {
+
+    return bankAccounts;
 }

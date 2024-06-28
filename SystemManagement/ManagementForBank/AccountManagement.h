@@ -1,36 +1,43 @@
 #pragma once
-#include "IAccountManagement.h"
 #include "MyString.h"
+#include <fstream>
 #include "Vector.h"
-#include "BankEmployee.h"
+#include "Pair.h"
 
-class AccountManagement : public IAccountManagement {
+
+
+class Account {
 public:
-    AccountManagement() = default;
+    Account();
 
-    bool createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn) override;
-    bool closeAccount(const MyString& accountNumber) override;
-    double checkBalance(const MyString& accountNumber) const override;
-    bool transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount) override;
+    size_t getAccountNumber() const;
+    double getBalance() const;
+    void depositMoney(double money);
+    void withdrawMoney(double money);
+    void saveToFile(std::ofstream& ofs) const;
+    void readFromFile(std::ifstream& ifs);
 
-//    bool validate(const MyString& accountNumber, const MyString& ownerEgn) const;
+private:
+    size_t accountNumber = 0;
+    double balance = 0.0;
+    static int accNum;
+};
 
-protected:
-    struct Account {
-        MyString accountNumber;
-        double balance = 0.0;
-        MyString ownerEGN;
 
-        Account(const MyString& accountNumber, double balance, const MyString& ownerEgn)
-                : accountNumber(accountNumber), balance(balance), ownerEGN(ownerEgn) {}
 
-        Account() = default;
+class AccountManagement {
+public:
+    void createAccount(const MyString& username);
+    void closeAccount(const MyString& username, size_t accNum);
 
-        void saveToFIle ( std::ofstream& ofs ) const;
-        void readFromFile (std::ifstream& ifs);
-    };
+    double checkBalance(size_t accNum) const;
+    void deposit(size_t accountNumber, const MyString& username, double amount);
+    void withdraw(size_t accountNumber, const MyString& username, double amount);
 
-    Vector<Account> accounts;
+    Vector<Pair<MyString, Account>> getBankAccounts() const;
 
-//    int findAccountIndex(const MyString& accountNumber) const;
+private:
+    Vector<Pair<MyString, Account>> bankAccounts;
+    size_t getIndexByAccNumAndUsername(size_t accNum, const MyString& username) const;
+    size_t getIndexByAccNum(size_t accNum) const;
 };

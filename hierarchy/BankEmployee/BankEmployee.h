@@ -1,41 +1,42 @@
 #pragma once
-
+#include "MyString.h"
+#include "User.h"
 #include "Task.h"
-#include "Bank.h"
+#include "Vector.h"
 
-class Bank;
 
-class BankEmployee : public User {
+
+class Employee : public User {
 public:
-    BankEmployee()= default;
-    BankEmployee(const MyString& firstName, const MyString& surname, const MyString& EGN, unsigned age,
-                 const MyString& password, Bank* bank);
+    Employee() = default;
 
-    void show_tasks() const ;
-    void view(const MyString& taskId) const ;
-    void approve(const MyString& taskId) ;
-    void disapprove(const MyString& taskId, const MyString& message) ;
-    bool validate(const MyString& taskId) const ;
+    Employee(const MyString& name, const MyString& surname,
+             const MyString& EGN, size_t age,
+             const MyString& password, const MyString& bankName ) :
+             User(name,surname,EGN,age,password ) , bankName(bankName){}
 
-    void addTask(const Task& task);
-    size_t getTaskCount() const;
+    void addTask (const Task& task);
+    size_t getNumberOfTasks () const;
+    const Task& getTaskAtIndex (size_t index) const;
+    Task& getTaskAtIndex (size_t index);
 
-    Bank* getCurrentBank () const {return bank;}
+    void saveToFile(std::ofstream& ofs) const override;
+    void readFromFile(std::ifstream& ifs) override;
 
-    ~BankEmployee() = default;
+    void view (size_t index) const;
+    void help() const override;
+    void whoAmI () const override;
 
-    Vector<Task> getTasks ()  {
-        return tasks;
+    User* clone () const {
+        return new Employee(*this);
     }
-    const Vector<Task>& getTasks() const { return tasks; }
 
-    void help() const;
 
-    User* clone() const override{
-        return new BankEmployee(*this);
-    }
+    void approveTask(size_t taskId);
+    void disapproveTask(size_t taskId, const MyString& message);
+    void validateTask(size_t taskId);
 
 private:
+    MyString bankName;
     Vector<Task> tasks;
-    Bank* bank = nullptr; //does not own the bank object
 };

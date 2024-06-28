@@ -1,60 +1,79 @@
-agma once
-#include "Client.h"
-#include "Application.h"
-#include <iostream>
 
-Client::Client(const MyString& firstName, const MyString& surname, const MyString& EGN, unsigned age, const MyString& password, const MyString& address)
+#include "Client.h"
+
+#include <iostream>
+#include <fstream>
+
+Client::Client(const MyString& firstName, const MyString& surname, const MyString& EGN, unsigned age,
+               const MyString& password, const MyString& address)
         : User(firstName, surname, EGN, age, password), address(address) {}
 
-Client::Client(MyString&& firstName, MyString&& surname, MyString&& EGN, unsigned age, MyString&& password, MyString&& address)
-        : User(std::move(firstName), std::move(surname), std::move(EGN), age, std::move(password)), address(std::move(address)) {}
-
-void Client::check_avl(const MyString& bankName, const MyString& accountNumber) const {
-
-    Application& app = Application::getInstance();
-    app.checkAccountBalance(bankName, accountNumber, id);
-}
-
-void Client::open(const MyString& bankName) {
-    Application& app = Application::getInstance();
-    app.openAccount(bankName, id);
-}
-
-void Client::close(const MyString& bankName, const MyString& accountNumber) {
-    Application& app = Application::getInstance();
-    app.closeAccount(bankName, accountNumber, id);
-}
-
-void Client::redeem(const MyString& bankName, const MyString& accountNumber, const MyString& verificationCode) {
-    Application& app = Application::getInstance();
-    app.redeemCheck(bankName, accountNumber, verificationCode, id);
-}
-
-void Client::change(const MyString& newBankName, const MyString& currBank, const MyString& accNum) {
-    Application& app = Application::getInstance();
-    app.changeAccountBank(newBankName, currBank, accNum, id);
-}
-
-void Client::list(const MyString& bankName) const {
-    Application& app = Application::getInstance();
-    app.listAccounts(bankName, id);
-}
-
-void Client::messages() const {
-    for (size_t i = 0; i < messageInbox.getSize(); ++i) {
-        std::cout << "[" << i + 1 << "] - " << messageInbox[i] << std::endl;
+double Client::getCheckSum(const MyString& verificationCode) const {
+    for (size_t i = 0; i < checks.getSize(); ++i) {
+        if (checks[i].getVerificationCode() == verificationCode) {
+            return checks[i].getSum();
+        }
     }
+    throw std::runtime_error("Check not found.");
 }
 
-void Client::addAccount(const MyString& accountName) {
-    bankAccounts.pushBack(accountName);
+void Client::addCheck(const BankCheck& check) {
+    checks.pushBack(check);
+    MyString message = "You have a check assigned with code " + MyString(check.getVerificationCode());
+    addMessage(message);
 }
 
 void Client::addMessage(const MyString& message) {
-    messageInbox.pushBack(message);
+    messages.sendMessage(this->getFullName(), message);
 }
 
+void Client::showMessages() const {
+    Vector<MyString> msgs = messages.getMessages(this->getFullName());
 
-Vector<MyString> Client::getAccounts() const {
-    return bankAccounts;
+    size_t size = msgs.getSize();
+
+    for (int i = 0; i < size; i++) {
+        std::cout << msgs[i].c_str() << '\n';
+    }
+
+}
+
+void Client::saveToFile(std::ofstream& ofs) const {
+    User::saveToFile(ofs);
+    address.saveToFile(ofs);
+    size_t checksCount = checks.getSize();
+    ofs.write((const char*)&checksCount, sizeof(checksCount));
+    for (size_t i = 0; i < checksCount; ++i) {
+        ofs.write(checks[i].getVerificationCode(), 4);
+        //ofs.write((const char*)(&checks[i].getSum()), sizeof(checks[i].getSum()));
+    }
+}
+
+void Client::readFromFile(std::ifstream& ifs) {
+    User::readFromFile(ifs);
+    address.readFromFile(ifs);
+    size_t checksCount;
+    ifs.read((char*)&checksCount, sizeof(checksCount));
+    for (size_t i = 0; i < checksCount; ++i) {
+        char code[4];
+        double sum;
+        ifs.read(code, 4);
+        ifs.read((char*)&sum, sizeof(sum));
+        checks.pushBack(BankCheck(code, sum));
+    }
+}
+
+void Client::help() const {
+    std::cout << "Client Help: \n";
+    std::cout << "1. check_avl [bank_name] [account_number]\n";
+    std::cout << "2. open [bank_name]\n";
+    std::cout << "3. close [bank_name] [account_number]\n";
+    std::cout << "4. redeem [bank_name] [account_number] [verification_code]\n";
+    std::cout << "5. change [new_bank_name] [current_bank_name] [account_number]\n";
+    std::cout << "6. list [bank_name]\n";
+    std::cout << "7. messages\n";
+}
+
+User* Client::clone() const {
+    return new Client(*this);
 }

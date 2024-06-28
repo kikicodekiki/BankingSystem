@@ -78,3 +78,32 @@ const char* doubleToString(double num, int precision)
 
     return str;
 }
+
+
+
+const char*  toString(unsigned int n)
+{
+    char str [100];
+    unsigned int len = getNumberLength(n);
+
+    for (int i = len - 1; i >= 0; i--)
+    {
+        str[i] = getCharFromDigit(n % 10);
+        n /= 10;
+    }
+    str[len] = '\0';
+
+    return str;
+}
+
+MyString parseEgn(const size_t EGN[10]) {
+    char egnStr[11];
+    for (size_t i = 0; i < 10; ++i) {
+        if (EGN[i] > 9) {
+            throw std::runtime_error("Invalid EGN number.");
+        }
+        egnStr[i] = '0' + EGN[i];
+    }
+    egnStr[10] = '\0';
+    return MyString(egnStr);
+}

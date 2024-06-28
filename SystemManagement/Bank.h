@@ -1,70 +1,32 @@
 #pragma once
-
 #include "AccountManagement.h"
-
-#include "UserManagement.h"
-
 #include "Messaging.h"
-//#include "MyString.h"
-//#include "Application.h"
-////#include "Task.h"
-////#include "BankEmployee.h"
 #include "BankCheck.h"
+#include "Employee.h"
 
-//class Messaging;
-
-class Application;
-class Bank{
-
+class Bank {
 public:
     Bank() = default;
+    Bank(const MyString& name) : bankName(name) {}
 
-    Bank(const MyString& name);
-
-    const MyString& getName() const;
-
-    //user management
-    void addUser(User* user);
-    Polymorphic_Ptr<User> findUser(const MyString& egn) const;
-    Polymorphic_Ptr<User> findUser (const size_t arr[EGN_SIZE]) const;
-
-
-    //account management
-    bool createAccount(const MyString& accountNumber, double initialBalance, const MyString& ownerEgn);
-    bool closeAccount(const MyString& accountNumber);
-    double checkBalance(const MyString& accountNumber) const;
-    bool transferAccount(const MyString& fromAccount, const MyString& toBank, const MyString& toAccount);
-
-    //messaging
-    void sendMessage(const MyString& userEgn, const MyString& message);
+    const Vector<Pair<MyString, Account> >& getBankAccounts() const;
+    void createAccount(const MyString& username);
+    void closeAccount(const MyString& username, size_t accNum);
+    double checkBalance(size_t accNum) const;
+    void deposit(size_t accountNumber, const MyString& username, double amount);
+    void withdraw(size_t accountNumber, const MyString& username, double amount);
+    void addMessage(const MyString& userEgn, const MyString& message);
     Vector<MyString> getMessages(const MyString& userEgn) const;
+    const MyString& getBankName() const { return bankName; }
 
-    BankEmployee* getLeastBusyEmployee();
-    const BankEmployee* getLeastBusyEmployee() const;
-
-    bool validateClientData (const Client* client, const MyString& accountNumber) const;
-
-    void issueCheck(const MyString& EGN, const BankCheck& check);
-    double redeemCheck (const MyString& accountNumber, const MyString& verificationCode);
-
-    void listAccounts (int clientId) ;
-    Vector<MyString> listAllAccounts (int clientId);
-
-//    AccountManagement& getAccountManager() {
-//        return accountManager;
-//    }
-//
-//    UserManagement& getUserManager() {
-//        return userManager;
-//    }
+    Employee* getLeastBusyEmployee();
+    void addEmployee(const Employee& employee);
 
 private:
-
     MyString bankName;
-
-    AccountManagement accountManager ;
-    UserManagement userManager;
+    AccountManagement manager;
     Messaging messaging;
+    Vector<BankCheck> assignedChecks;
+    Vector<Employee> employees;
 
-    Vector<BankCheck> issuedChecks;
 };

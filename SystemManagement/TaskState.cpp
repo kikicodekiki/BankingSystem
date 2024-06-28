@@ -1,62 +1,70 @@
 #include "TaskState.h"
+#include "Task.h"
 #include "Application.h"
-#include "BankEmployee.h"
-#include <iostream>
+
+void Approved::approve(Task& task) {
+
+}
+
+void Approved::reject(Task& task, const MyString& message) {
+
+}
+
+void Approved::validate(Task& task) {
+
+}
+
+void Rejected::approve(Task& task) {
+    // Can't approve a rejected task, do nothing or throw an error
+}
+
+void Rejected::reject(Task& task, const MyString& message) {
+    // Already rejected, do nothing or throw an error
+}
+
+void Rejected::validate(Task& task) {
+    // Task is already rejected, validation logic can be skipped or throw an error
+}
 
 void NeedsApproval::approve(Task& task) {
-    // This will handle the initial approval and forwarding process
-    Application& app = Application::getInstance();
-    if (task.type == TaskType::CHANGE) {
-        // Forward task to another employee for validation
-        Bank* currentBank = app.findBank(task.details); // assuming task.details contains currentBank info
-        if (currentBank) {
-            BankEmployee* leastBusyEmployee = app.getLeastBusyEmployee();
-            if (leastBusyEmployee) {
-                leastBusyEmployee->addTask(task);
-                std::cout << "Task forwarded to another employee for validation.\n";
-                return;
-            }
-        }
-    }
+    // Move to approved state
     task.setState(new Approved());
 }
 
 void NeedsApproval::reject(Task& task, const MyString& message) {
+    // Move to rejected state
     task.setState(new Rejected());
-    Application::getInstance().addMessageToClient(task.client->getId(), "Your request has been rejected. Reason: " + message);
 }
 
-void Approved::approve(Task& task) {
-    // Handle final approval and task completion
-    Application& app = Application::getInstance();
-    switch (task.type) {
-        case TaskType::OPEN:
-            app.openAccount(task.details, task.client->getId());
-            break;
-        case TaskType::CLOSE:
-            app.closeAccount(task.details, task.client->getId());
-            break;
-        case TaskType::CHANGE:
 
-            app.changeAccountBank(currentBank, newBank, task.client->getId());
-            break;
-        default:
-            std::cout << "Unknown task type.\n";
-            return;
+void NeedsApproval::validate(Task& task) {
+    Application& app = Application::getInstance();
+
+
+    Bank* bank = app.findBank(task.bankName);
+    if (!bank) {
+        std::cerr << "Validation failed: Bank does not exist." << std::endl;
+        task.setState(new Rejected());
+        return;
     }
 
-    app.addMessageToClient(task.client->getId(), "Your request has been approved.");
+
+    bool accountExists = false;
+    const Vector<Pair<MyString, Account>>& accounts = bank->getBankAccounts();
+    for (size_t i = 0; i < accounts.getSize(); ++i) {
+        if (accounts[i].getRhs().getAccountNumber() == std::stoul(task.accountNumber.c_str())) {
+            accountExists = true;
+            break;
+        }
+    }
+
+    if (!accountExists) {
+        std::cerr << "Validation failed: Account number does not exist." << std::endl;
+        task.setState(new Rejected());
+        return;
+    }
+
+    std::cout << "Validation passed: Task approved." << std::endl;
     task.setState(new Approved());
 }
 
-void Approved::reject(Task& task, const MyString& message) {
-    std::cout << "Cannot reject an already approved task.\n";
-}
-
-void Rejected::approve(Task& task) {
-    std::cout << "Cannot approve a rejected task.\n";
-}
-
-void Rejected::reject(Task& task, const MyString& message) {
-    std::cout << "Task is already rejected.\n";
-}
